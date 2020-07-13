@@ -12,7 +12,7 @@ from ..common.trex_ns import *
 
 # scapy
 from scapy.all import Ether, IP, TCP, UDP
-
+from scapy.layers.ppp import *
 
 #######################
 # backward compatible #

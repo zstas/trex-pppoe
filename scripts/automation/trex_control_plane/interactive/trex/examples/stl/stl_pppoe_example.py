@@ -83,10 +83,10 @@ class DHCPTest(object):
         streams = []
         for client in clients:
             record = client.get_record()
-            base_pkt = Ether(src=record.client_mac)/IP(src=record.client_ip,dst=record.server_ip)/UDP()
+            base_pkt = Ether(src=record.client_mac,dst=record.server_mac)/PPPoE(sessionid=record.sid)/PPP(proto="Internet Protocol version 4")/IP(src=record.client_ip,dst='8.8.8.8')/UDP()
             pkt = STLPktBuilder(pkt = base_pkt, vm = [])
             
-            streams.append(STLStream(packet = pkt, mode = STLTXSingleBurst(total_pkts = 1000)))
+            streams.append(STLStream(packet = pkt, mode = STLTXCont(pps = 1000)))
         
         self.c.add_streams(ports = self.port, streams = streams)
         self.c.start(ports = self.port, mult = '100%')
@@ -109,7 +109,7 @@ class DHCPTest(object):
         
         
     def create_dhcp_clients (self, count):
-        dhcps = [ServicePPPOE(mac = random_mac(), verbose_level = ServicePPPOE.INFO) for _ in range(count)]
+        dhcps = [ServicePPPOE(mac = random_mac(), verbose_level = ServicePPPOE.ERROR) for _ in range(count)]
 
         # execute all the registered services
         print('\n*** step 1: starting DHCP acquire for {} clients ***\n'.format(len(dhcps)))

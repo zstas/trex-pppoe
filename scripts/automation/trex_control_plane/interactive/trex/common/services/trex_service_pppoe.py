@@ -380,6 +380,7 @@ class ServicePPPOE(Service):
             self.client_mac = parent.mac
             self.server_ip = parent.ac_ip
             self.client_ip = parent.ip
+            self.sid = parent.session_id
                         
             
         def __str__ (self):
