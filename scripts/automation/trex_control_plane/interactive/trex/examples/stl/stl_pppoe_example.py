@@ -23,7 +23,7 @@ def random_mac_range (count):
     return [random_mac() for _ in range(count)]
 
 
-class DHCPTest(object):
+class PPPoETest(object):
     def __init__ (self, port):
         self.port = port
         self.c    = STLClient()
@@ -32,7 +32,7 @@ class DHCPTest(object):
             
         try:
             self.c.connect()
-            self.c.reset(ports = self.port)
+            self.c.reset(ports = [0,1])
             self.ctx  = self.c.create_service_ctx(port = self.port)
             
             # create clients
@@ -89,8 +89,8 @@ class DHCPTest(object):
             streams.append(STLStream(packet = pkt, mode = STLTXCont(pps = 1000)))
         
         self.c.add_streams(ports = self.port, streams = streams)
-        self.c.start(ports = self.port, mult = '100%')
-        self.c.wait_on_traffic()
+        self.c.start(ports = [0], mult = '100%')
+        self.c.wait_on_traffic(ports=[0,1])
         
         print('\n*** Done ***\n')
         
@@ -109,35 +109,35 @@ class DHCPTest(object):
         
         
     def create_dhcp_clients (self, count):
-        dhcps = [ServicePPPOE(mac = random_mac(), verbose_level = ServicePPPOE.ERROR) for _ in range(count)]
+        pppoe_clients = [ServicePPPOE(mac = random_mac(), verbose_level = ServicePPPOE.ERROR) for _ in range(count)]
 
         # execute all the registered services
-        print('\n*** step 1: starting DHCP acquire for {} clients ***\n'.format(len(dhcps)))
-        self.ctx.run(dhcps)
+        print('\n*** step 1: starting PPPoE acquire for {} clients ***\n'.format(len(pppoe_clients)))
+        self.ctx.run(pppoe_clients)
         
-        print('\n*** step 2: DHCP acquire results ***\n')
-        for dhcp in dhcps:
-            record = dhcp.get_record()
-            print('client: MAC {0} - DHCP: {1}'.format(dhcp.get_mac(),record))
+        print('\n*** step 2: PPPoE acquire results ***\n')
+        for client in pppoe_clients:
+            record = client.get_record()
+            print('client: MAC {0} - PPPoE: {1}'.format(client.get_mac(),record))
         
         # filter those that succeeded
-        bounded_dhcps = [dhcp for dhcp in dhcps if dhcp.state == 'BOUND']
+        bounded_pppoe_clients = [client for client in pppoe_clients if client.state == 'BOUND']
         
-        return bounded_dhcps
+        return bounded_pppoe_clients
         
     def release_dhcp_clients (self, clients):
-        print('\n*** step 5: starting DHCP release for {} clients ***\n'.format(len(clients)))
+        print('\n*** step 5: starting PPPoE release for {} clients ***\n'.format(len(clients)))
         self.ctx.run(clients)
         
         
     
 def main ():
 
-    print('How many DHCP clients to create: ', end='')
+    print('How many PPPoE clients to create: ', end='')
     count = int(input())
 
-    dhcp_test = DHCPTest(0)
-    dhcp_test.run(count)
+    pppoe_test = PPPoETest(0)
+    pppoe_test.run(count)
     
    
 if __name__ == '__main__':
